@@ -1,12 +1,21 @@
 import * as React from 'react';
+import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import * as CalcStore from '../store/Calculator';
-import { RouteComponentProps } from 'react-router';
-import { ApplicationState } from '../store';
+import { ApplicationState, AppThunkAction } from '../store';
+import { applyOperator } from '../store/Calculator';
+
+interface ThunkActions {
+    applyOperator: (operator: CalcStore.CalcOperator) => AppThunkAction<CalcStore.KnownAction>
+}
+
+type HomeActions =
+    ThunkActions &
+    typeof CalcStore.actionCreators;
 
 type HomeProps =
     CalcStore.CalculatorState &
-    typeof CalcStore.actionCreators;
+    HomeActions;
 
 const getCurrentValue = (props: HomeProps) => {
     let s = props.value;
@@ -34,6 +43,7 @@ const operatorToString = (op: CalcStore.CalcOperator) => {
 
 class Home extends React.PureComponent<HomeProps> {
     public render() {
+        console.log(this.props);
         return (
             <div>
                 <div>
@@ -41,7 +51,7 @@ class Home extends React.PureComponent<HomeProps> {
                         <input name="currentValue" readOnly={true} value={getCurrentValue(this.props)} />
                     </div>
                     <div>
-                        <button onClick={() => this.props.clear()}>C</button>
+                        <button disabled={this.props.busy} onClick={() => this.props.clear()}>C</button>
                         <button onClick={() => this.props.clearEntry()}>CE</button>
                         <button onClick={() => this.props.backspace()}>&larr;</button>
                         <button onClick={() => this.props.applyOperator({ name: 'ADD' })}>+</button>
@@ -76,7 +86,10 @@ class Home extends React.PureComponent<HomeProps> {
                         <h3>History</h3>
                         <div>
                             { this.props.history.map((entry, i, arr) => (
-                                <div key={i}>{entry.value}&nbsp;{operatorToString(entry.operator)}</div>
+                                <div key={i}>
+                                    <div>{entry.value} {operatorToString(entry.operator)}</div>
+                                    <div><small>= {entry.total}</small></div>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -89,7 +102,16 @@ class Home extends React.PureComponent<HomeProps> {
     }
 }
 
+const mapDispatchToProps = (dispatch: Dispatch<any>): HomeActions => ({
+    applyOperator: (operator: CalcStore.CalcOperator) => dispatch(applyOperator(operator)),
+    toggleModifier: (modifier: CalcStore.CalcModifier) => dispatch(CalcStore.actionCreators.toggleModifier(modifier)),
+    clear: () => dispatch(CalcStore.actionCreators.clear()),
+    clearEntry: () => dispatch(CalcStore.actionCreators.clearEntry()),
+    backspace: () => dispatch(CalcStore.actionCreators.backspace()),
+    append: (value: string) => dispatch(CalcStore.actionCreators.append(value)),
+});
+
 export default connect(
     (state: ApplicationState) => state.calculator,
-    CalcStore.actionCreators
+    mapDispatchToProps
 )(Home);
