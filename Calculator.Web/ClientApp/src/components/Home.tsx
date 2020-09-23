@@ -81,6 +81,9 @@ class Home extends React.PureComponent<HomeProps> {
                         </div>
                     </div>
                 </div>
+                <p>
+                    View the code on <a href="https://github.com/rorymacleod/Calculator">GitHub</a>.
+                </p>
             </div>
         );
     }
