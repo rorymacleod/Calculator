@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Calculator.Web.Controllers
@@ -8,16 +9,33 @@ namespace Calculator.Web.Controllers
     [ApiController]
     public class CalculationController : ControllerBase
     {
-        [HttpGet]
-        public IEnumerable<Calculation> Get()
-        {
-            throw new NotImplementedException();
-        }
+        private static readonly Operator[] Operators = {
+            Operator.Add,
+            Operator.Subtract,
+            Operator.Multiply,
+            Operator.Divide
+        };
 
-        [HttpGet("{id}")]
-        public Calculation Get(int id)
+        [HttpGet]
+        public IEnumerable<CalcLogEntry> Get()
         {
-            throw new NotImplementedException();
+            int id = 0;
+            var fake = new Bogus.Faker();
+            return Enumerable
+                .Range(1, 5)
+                .Select(index => {
+                    var op = fake.Random.CollectionItem(Operators);
+                    var entry = new CalcLogEntry {
+                        Id = id++,
+                        DateTime = fake.Date.Recent(),
+                        Subtotal = Math.Round(fake.Random.Decimal(max: 10), 1),
+                        Value = Math.Round(fake.Random.Decimal(max: 10), 1),
+                        Operator = op.ToString(),
+                        ClientAddress = fake.Internet.IpAddress().ToString(),
+                    };
+                    return entry;
+                })
+                .ToList();
         }
 
         [HttpPost]
@@ -29,65 +47,14 @@ namespace Calculator.Web.Controllers
         }
     }
 
-    public static class OperatorFactory
+    public class CalcLogEntry
     {
-        public static Operator Create(OperatorDescriptor descriptor)
-        {
-            switch (descriptor.Name)
-            {
-                case "ADD":
-                    return Operator.Add;
-                case "SUBTRACT":
-                    return Operator.Subtract;
-                case "MULTIPLY":
-                    return Operator.Multiply;
-                case "DIVIDE":
-                    return Operator.Divide;
-                default:
-                    throw new NotSupportedException($"Operator \"{descriptor.Name}\" is not supported.");
-            }
-        }
+        public int Id { get; set; }
+        public DateTime DateTime { get; set; }
+        public decimal Subtotal { get; set; }
+        public string Operator { get; set; }
+        public decimal Value { get; set; }
+        public string ClientAddress { get; set; }
     }
 
-    public abstract class Operator
-    {
-        public static Operator Add { get; } = new AddOperator();
-        public static Operator Subtract { get; } = new SubtractOperator();
-        public static Operator Multiply { get; } = new MultiplyOperator();
-        public static Operator Divide { get; } = new DivideOperator();
-
-        private class AddOperator : Operator
-        {
-            public override decimal Apply(decimal operand1, decimal operand2)
-            {
-                return operand1 + operand2;
-            }
-        }
-
-        private class SubtractOperator : Operator
-        {
-            public override decimal Apply(decimal operand1, decimal operand2)
-            {
-                return operand1 - operand2;
-            }
-        }
-
-        private class MultiplyOperator : Operator
-        {
-            public override decimal Apply(decimal operand1, decimal operand2)
-            {
-                return operand1 * operand2;
-            }
-        }
-
-        private class DivideOperator : Operator
-        {
-            public override decimal Apply(decimal operand1, decimal operand2)
-            {
-                return operand1 / operand2;
-            }
-        }
-
-        public abstract decimal Apply(decimal operand1, decimal operand2);
-    }
 }

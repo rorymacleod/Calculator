@@ -1,11 +1,11 @@
-import * as WeatherForecasts from './WeatherForecasts';
+import * as Logs from './CalcLogs';
 import * as Counter from './Counter';
 import * as Calculator from './Calculator';
 
 // The top-level state object
 export interface ApplicationState {
     counter: Counter.CounterState | undefined;
-    weatherForecasts: WeatherForecasts.WeatherForecastsState | undefined;
+    logs: Logs.CalcLogsState | undefined;
     calculator: Calculator.CalculatorState;
 }
 
@@ -15,7 +15,7 @@ export interface ApplicationState {
 export const reducers = {
     calculator: Calculator.reducer,
     counter: Counter.reducer,
-    weatherForecasts: WeatherForecasts.reducer
+    logs: Logs.reducer
 };
 
 // This type can be used as a hint on action creators so that its 'dispatch' and 'getState' params are
